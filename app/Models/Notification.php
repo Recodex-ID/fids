@@ -16,6 +16,18 @@ class Notification extends Model
         'type',
         'message',
         'sent_at',
+        'status',
+        'delivery_channels',
+        'delivered_at',
+        'failed_at',
+        'failure_reason',
+        'retry_count',
+        'retry_at',
+        'notification_id',
+        'metadata',
+        'priority',
+        'template_name',
+        'template_data',
     ];
 
     protected $hidden = [];
@@ -24,6 +36,13 @@ class Notification extends Model
     {
         return [
             'sent_at' => 'datetime',
+            'delivered_at' => 'datetime',
+            'failed_at' => 'datetime',
+            'retry_at' => 'datetime',
+            'delivery_channels' => 'array',
+            'metadata' => 'array',
+            'template_data' => 'array',
+            'retry_count' => 'integer',
         ];
     }
 
@@ -78,6 +97,93 @@ class Notification extends Model
 
     public function markAsSent(): void
     {
-        $this->update(['sent_at' => now()]);
+        $this->update([
+            'sent_at' => now(),
+            'status' => 'sent'
+        ]);
+    }
+
+    public function markAsDelivered(): void
+    {
+        $this->update([
+            'delivered_at' => now(),
+            'status' => 'delivered'
+        ]);
+    }
+
+    public function markAsFailed(string $reason = null): void
+    {
+        $this->update([
+            'failed_at' => now(),
+            'status' => 'failed',
+            'failure_reason' => $reason,
+            'retry_count' => $this->retry_count + 1,
+            'retry_at' => $this->calculateNextRetry(),
+        ]);
+    }
+
+    public function scheduleRetry(int $delayMinutes = null): void
+    {
+        $delay = $delayMinutes ?: $this->calculateRetryDelay();
+        
+        $this->update([
+            'retry_at' => now()->addMinutes($delay),
+            'status' => 'pending',
+        ]);
+    }
+
+    private function calculateRetryDelay(): int
+    {
+        // Exponential backoff: 1, 2, 4, 8, 16 minutes, max 60 minutes
+        return min(60, pow(2, $this->retry_count));
+    }
+
+    private function calculateNextRetry(): ?\Carbon\Carbon
+    {
+        if ($this->retry_count >= 5) {
+            return null; // Max retries reached
+        }
+        
+        return now()->addMinutes($this->calculateRetryDelay());
+    }
+
+    public function scopeForRetry($query)
+    {
+        return $query->where('status', 'failed')
+                    ->where('retry_count', '<', 5)
+                    ->whereNotNull('retry_at')
+                    ->where('retry_at', '<=', now());
+    }
+
+    public function scopeByStatus($query, string $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    public function scopeByPriority($query, string $priority)
+    {
+        return $query->where('priority', $priority);
+    }
+
+    public function scopeHighPriority($query)
+    {
+        return $query->whereIn('priority', ['high', 'urgent']);
+    }
+
+    public function getIsRetryableAttribute(): bool
+    {
+        return $this->status === 'failed' && $this->retry_count < 5 && $this->retry_at && $this->retry_at <= now();
+    }
+
+    public function getStatusDisplayAttribute(): string
+    {
+        return match ($this->status) {
+            'pending' => 'Pending',
+            'sent' => 'Sent',
+            'delivered' => 'Delivered',
+            'failed' => 'Failed',
+            'cancelled' => 'Cancelled',
+            default => 'Unknown',
+        };
     }
 }
