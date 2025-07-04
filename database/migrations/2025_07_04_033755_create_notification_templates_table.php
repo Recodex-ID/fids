@@ -38,9 +38,9 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index(['type', 'channel', 'language']);
-            $table->index(['name', 'is_active']);
-            $table->index(['variant', 'type']);
+            $table->index(['type', 'channel', 'language'], 'nt_type_channel_lang_idx');
+            $table->index(['name', 'is_active'], 'nt_name_active_idx');
+            $table->index(['variant', 'type'], 'nt_variant_type_idx');
         });
     }
 

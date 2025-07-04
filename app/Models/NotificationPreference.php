@@ -136,9 +136,16 @@ class NotificationPreference extends Model
      */
     public static function createDefaultForPassenger(Passenger $passenger): self
     {
+        $timezone = config('app.timezone');
+        
+        // Try to get timezone from flight's destination airport if available
+        if ($passenger->flight && $passenger->flight->destinationAirport) {
+            $timezone = $passenger->flight->destinationAirport->timezone ?? $timezone;
+        }
+        
         return self::create([
             'passenger_id' => $passenger->id,
-            'timezone' => $passenger->flight->destination_airport->timezone ?? config('app.timezone'),
+            'timezone' => $timezone,
         ]);
     }
 }

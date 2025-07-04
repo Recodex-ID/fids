@@ -23,8 +23,8 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index(['passenger_id', 'is_active']);
-            $table->unique(['passenger_id', 'endpoint'], 'unique_passenger_endpoint');
+            $table->index(['passenger_id', 'is_active'], 'ps_passenger_active_idx');
+            $table->unique(['passenger_id', 'endpoint'], 'ps_passenger_endpoint_unique');
         });
     }
 

@@ -31,10 +31,10 @@ return new class extends Migration
             $table->json('template_data')->nullable()->after('template_name');
             
             // Indexes for performance
-            $table->index(['status', 'created_at']);
-            $table->index(['notification_id']);
-            $table->index(['retry_at']);
-            $table->index(['priority', 'status']);
+            $table->index(['status', 'created_at'], 'notif_status_created_idx');
+            $table->index(['notification_id'], 'notif_id_idx');
+            $table->index(['retry_at'], 'notif_retry_idx');
+            $table->index(['priority', 'status'], 'notif_priority_status_idx');
         });
     }
 
@@ -44,10 +44,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->dropIndex(['status', 'created_at']);
-            $table->dropIndex(['notification_id']);
-            $table->dropIndex(['retry_at']);
-            $table->dropIndex(['priority', 'status']);
+            $table->dropIndex('notif_status_created_idx');
+            $table->dropIndex('notif_id_idx');
+            $table->dropIndex('notif_retry_idx');
+            $table->dropIndex('notif_priority_status_idx');
             
             $table->dropColumn([
                 'status',

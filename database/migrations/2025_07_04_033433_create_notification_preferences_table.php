@@ -46,7 +46,7 @@ return new class extends Migration
             
             // Indexes
             $table->index(['passenger_id']);
-            $table->index(['email_enabled', 'sms_enabled', 'push_enabled']);
+            $table->index(['email_enabled', 'sms_enabled', 'push_enabled'], 'np_channels_idx');
         });
     }
 
