@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AirlineController;
 use App\Http\Controllers\AirportController;
+use App\Http\Controllers\DisplayBoardController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\PassengerController;
 use Illuminate\Support\Facades\Route;
@@ -30,3 +31,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('departures', [FlightController::class, 'index'])->name('public.departures');
 Route::get('arrivals', [FlightController::class, 'index'])->name('public.arrivals');
 Route::get('flight/{flight}', [FlightController::class, 'show'])->name('public.flight');
+
+// Display Board Routes (public access)
+Route::get('display-board', [DisplayBoardController::class, 'index'])->name('display-board');
+Route::get('display-board/departures', [DisplayBoardController::class, 'departures'])->name('display-board.departures');
+Route::get('display-board/arrivals', [DisplayBoardController::class, 'arrivals'])->name('display-board.arrivals');
+Route::get('display-board/kiosk', [DisplayBoardController::class, 'kiosk'])->name('display-board.kiosk');
+
+// Display Board API Routes (public access)
+Route::get('api/display-board/refresh', [DisplayBoardController::class, 'refresh'])->name('api.display-board.refresh');
+Route::get('api/display-board/statistics', [DisplayBoardController::class, 'statistics'])->name('api.display-board.statistics');
